@@ -1,0 +1,50 @@
+The login page takes over 5 seconds to load on mobile data, causing a high drop-off rate.
+I love the new dark mode, it makes working late at night much easier on the eyes.
+When exporting the report to PDF, the app crashes with an out of memory error.
+We need a Jira integration so that issues sync automatically with our sprint board.
+The dashboard is too cluttered since the last update, the widgets overlap on smaller screens.
+Search doesn't handle typos well; "accoutn" returns zero results instead of "account".
+Could we add a bulk edit feature for user permissions? Doing it one by one is tedious.
+The API rate limit is too restrictive for our use case; we need a higher enterprise tier.
+Great job on the new onboarding flow, it reduced our average time-to-first-value significantly.
+Notifications for @mentions are delayed by several minutes on the mobile app.
+The new analytics graphs are beautiful but lack the ability to export the underlying CSV data.
+Whenever I hit Cmd+Enter to submit a comment, it submits twice and creates duplicates.
+Can we have a customizable sidebar? I rarely use the 'Projects' tab and want to hide it.
+The application memory footprint balloons after a few hours of use, requiring a restart.
+The drag-and-drop interface for the Kanban board is incredibly smooth and responsive.
+I can't reset my password; the reset link in the email always says it's expired.
+We need role-based access control (RBAC) before we can roll this out to the rest of the company.
+The documentation for the webhooks is outdated and missing the new payload fields.
+Typing in the rich text editor feels sluggish when the document gets longer than a few pages.
+I really appreciate the weekly changelog updates, it keeps the whole team informed.
+The mobile app drains battery extremely fast when running in the background.
+Please add support for two-factor authentication (2FA) using authenticator apps.
+The keyboard shortcuts for navigating between tabs are a game changer for my workflow.
+When filtering by date range, the calendar picker closes unexpectedly.
+It would be great to have an undo button after deleting a workspace.
+The syntax highlighting in the code snippets block sometimes misinterprets Python as Ruby.
+Our security team flagged the lack of SSO via SAML as a blocker for renewal.
+The tooltip on the save button blocks the dropdown menu below it.
+I'm seeing a 502 Bad Gateway error randomly during peak hours on the US-East server.
+Adding a custom domain for our public status page would make it look much more professional.
+The copy-paste functionality strips out all formatting when pasting from Microsoft Word.
+I love how fast the global search is, it finds exactly what I need instantly.
+There's a typo in the main settings page: "Preferances" instead of "Preferences".
+We desperately need an undo feature for the canvas editor; accidental deletions are painful.
+The video playback stutters when switching to 1080p resolution on Chrome.
+Can we get an option to disable email notifications for replies to threads I've muted?
+The layout breaks completely on iPad Pro when in portrait orientation.
+Sorting the table by the 'status' column doesn't group the items logically.
+The loading spinner gets stuck infinitely if the network connection drops for a second.
+I really like the new command palette (Cmd+K), it speeds up navigation so much.
+The contrast of the gray text on the white background is too low for accessibility.
+When trying to upload an avatar image larger than 2MB, there's no error message, it just fails silently.
+Please allow us to reorder the columns in the data grid view.
+The integration with Slack is brilliant, the interactive messages save us so much time.
+Session timeouts are too aggressive; I get logged out after just 15 minutes of inactivity.
+The print stylesheet is missing, so printing a ticket includes all the unnecessary sidebars.
+We need a way to merge duplicate customer records in the CRM module.
+The new keyboard navigation is missing focus states on several buttons in the header.
+It takes too many clicks to get to the billing invoices; please make it more accessible.
+The performance improvements in the latest patch are very noticeable, everything feels snappier.
