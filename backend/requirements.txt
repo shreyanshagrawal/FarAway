@@ -10,3 +10,4 @@ alembic
 tiktoken
 python-dotenv
 httpx
+google-genai

@@ -308,19 +308,22 @@ Function signature: async def run_domain_agent(state: AgentState, db_session) ->
 
 Steps:
 1. Load the prompt from /prompts/domain.txt
-2. Call the Anthropic API (claude-sonnet-4-20250514) with:
+2. Call Gemini 2.5 Flash (gemini-2.5-flash) with:
    - The system prompt from domain.txt
    - User message: the first 4000 characters of state["input_bundle"]["text"]
    - max_tokens: 500
 3. Parse the JSON response. If parsing fails, return a default "general" domain context.
+Generate structured JSON output matching the schema defined in domain.txt.
 4. Respect domain_override from input_bundle: if set, override project_type with it.
 5. Build a DomainContext dict from the parsed response and store it in state["domain_context"].
 6. Emit a step dict using emit_step() and append it to state["agent_trace"].
 7. Write the domain_context to the domain_contexts table in the DB.
 8. Return the updated state.
 
-Use the anthropic Python SDK. Load ANTHROPIC_API_KEY from environment.
+Use the Google GenAI SDK. Load GEMINI_API_KEY from environment.
 Add error handling: on any exception, set domain to "general" with confidence 0.0 and continue.
+On failure:
+fallback to the default general domain context.
 ```
 
 ---
