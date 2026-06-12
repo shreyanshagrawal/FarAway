@@ -2,8 +2,6 @@ fastapi
 uvicorn
 langgraph
 qdrant-client
-openai
-anthropic
 scikit-learn
 sqlalchemy
 alembic
