@@ -1,23 +1,57 @@
 from langgraph.graph import StateGraph, START, END
 from .state import AgentState
 
-def orchestrator_node(state: AgentState):
+from .domain_agent import run_domain_agent
+from .insight_agent import run_insight_agent
+from .priority_agent import run_priority_agent
+from .writer_agent import run_writer_agent
+from .task_agent import run_task_agent
+from db.database import SessionLocal
+
+async def orchestrator_node(state: AgentState):
+    state["pipeline_status"] = "running"
     return state
 
-def domain_node(state: AgentState):
-    return state
+async def domain_node(state: AgentState):
+    db = SessionLocal()
+    try:
+        new_state = await run_domain_agent(state, db)
+        return new_state
+    finally:
+        db.close()
 
-def insight_node(state: AgentState):
-    return state
+async def insight_node(state: AgentState):
+    db = SessionLocal()
+    try:
+        new_state = await run_insight_agent(state, db)
+        return new_state
+    finally:
+        db.close()
 
-def priority_node(state: AgentState):
-    return state
+async def priority_node(state: AgentState):
+    db = SessionLocal()
+    try:
+        new_state = await run_priority_agent(state, db)
+        return new_state
+    finally:
+        db.close()
 
-def writer_node(state: AgentState):
-    return state
+async def writer_node(state: AgentState):
+    db = SessionLocal()
+    try:
+        new_state = await run_writer_agent(state, db)
+        return new_state
+    finally:
+        db.close()
 
-def task_node(state: AgentState):
-    return state
+async def task_node(state: AgentState):
+    db = SessionLocal()
+    try:
+        new_state = await run_task_agent(state, db)
+        new_state["pipeline_status"] = "complete"
+        return new_state
+    finally:
+        db.close()
 
 graph_builder = StateGraph(AgentState)
 

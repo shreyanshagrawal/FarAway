@@ -16,7 +16,7 @@ Create a monorepo project structure with the following folders at root:
 
 Inside /backend create:
 - main.py (empty FastAPI app)
-- requirements.txt with: fastapi, uvicorn, langgraph, qdrant-client, openai, anthropic, scikit-learn, sqlalchemy, alembic, tiktoken, python-dotenv, httpx
+- requirements.txt with: fastapi, uvicorn, langgraph, qdrant-client, google-genai, scikit-learn, sqlalchemy, alembic, tiktoken, python-dotenv, httpx
 
 Inside /frontend run: npx create-next-app@14 . --typescript --tailwind --app
 
@@ -390,8 +390,8 @@ Function signature: async def run_insight_agent(state: AgentState, db_session) -
 
 Steps:
 1. Chunk state["input_bundle"]["text"] using chunk_text() from utils.py (512 tokens max)
-2. For each chunk, call OpenAI text-embedding-3-small to get a 1536-dim embedding.
-   Use the openai Python SDK. Batch the calls — one API call per chunk is fine for MVP.
+2. For each chunk, call Gemini text-embedding-004 to get a 1536-dim embedding.
+   Use the Google GenAI SDK. Batch the calls — one API call per chunk is fine for MVP.
 3. Upsert all chunk vectors to Qdrant:
    - Collection name: "input_chunks"
    - Each point has: id (uuid), vector (1536 floats), payload {run_id, text, chunk_index}
@@ -400,7 +400,7 @@ Steps:
 5. Run KMeans clustering with scikit-learn:
    - Try k = 3 to min(8, num_chunks) and pick k with best silhouette score
    - If fewer than 6 chunks, use k=2
-6. For each cluster, collect the chunk texts and call Claude to:
+6. For each cluster, collect the chunk texts and call Gemini to:
    - Label the theme (one short phrase)
    - Score sentiment (-1.0 to 1.0)
    Use a simple prompt: "Given these feedback items, return JSON: {theme_label: string, sentiment_score: float}"
@@ -410,7 +410,7 @@ Steps:
 10. Emit step events and append to agent_trace.
 11. Set state["insights"] and return state.
 
-Load OPENAI_API_KEY and Qdrant host (default localhost:6333) from environment.
+Load GEMINI_API_KEY and Qdrant host (default localhost:6333) from environment.
 ```
 
 ---
@@ -423,7 +423,7 @@ Function signature: async def run_priority_agent(state: AgentState, db_session) 
 
 Steps:
 1. Read state["insights"] and state["domain_context"]["priority_weights"]
-2. For each insight theme, call Claude to score:
+2. For each insight theme, call Gemini to score:
    - impact_score: 1.0-10.0
    - effort_score: 1.0-10.0 (higher = more effort)
    - confidence_score: 1.0-10.0
@@ -483,7 +483,7 @@ Structure a Curriculum Plan with:
 
 Each prompt file must:
 - Use XML structure: <context>, <task>, <constraints>, <output_format>
-- Instruct Claude to use the domain context vocabulary
+- Instruct Gemini to use the domain context vocabulary
 - Output well-formatted markdown
 - Return only the document, no preamble
 ```
@@ -508,7 +508,7 @@ Steps:
    - Domain vocabulary from state["domain_context"]["vocabulary"]
    - Top insights with sentiment context
 
-3. Call Claude (claude-sonnet-4-20250514) with max_tokens 2000.
+3. Call Gemini (gemini-sonnet-4-20250514) with max_tokens 2000.
 
 4. The response is the raw markdown SpecDocument.
 
@@ -528,7 +528,7 @@ Create /backend/agents/task_agent.py.
 Function signature: async def run_task_agent(state: AgentState, db_session) -> AgentState
 
 Steps:
-1. Call Claude with state["spec_document"] and this instruction:
+1. Call Gemini with state["spec_document"] and this instruction:
    "Decompose this specification into 6-10 granular tasks.
     Return ONLY a JSON array. Each item:
     {title, description, priority_tag (P0/P1/P2/P3), effort_estimate (XS/S/M/L/XL)}"
@@ -1271,7 +1271,7 @@ Do a full clean-up pass on the backend:
 
 1. Remove all print() statements — replace any debug logging with Python's logging module at DEBUG level.
 
-2. Ensure all .env values have a sensible fallback check at startup — if ANTHROPIC_API_KEY is missing, raise a clear error on startup: "Missing required environment variable: ANTHROPIC_API_KEY"
+2. Ensure all .env values have a sensible fallback check at startup — if GEMINI_API_KEY is missing, raise a clear error on startup: "Missing required environment variable: GEMINI_API_KEY"
 
 3. In main.py add a startup event that:
    - Verifies Qdrant is reachable (GET http://qdrant:6333/healthz)
@@ -1379,7 +1379,7 @@ Returns: {"text": string, "dataset": string, "item_count": int}
 
 Also update the health endpoint to actually verify:
 1. Qdrant responds at http://{QDRANT_HOST}:{QDRANT_PORT}/healthz
-2. The Anthropic API key is valid (make a minimal test call — list models or similar)
+2. The Gemini API key is valid (make a minimal test call — list models or similar)
 3. Return: {"status": "ok", "qdrant": "ok" | "error", "llm": "ok" | "error", "linear": "ok" | "not_configured"}
    linear is "not_configured" if LINEAR_API_KEY is not set — this is not an error for the demo.
 ```
@@ -1492,7 +1492,7 @@ This page lives at /slide — use it as the opening slide before the live demo.
 ```
 
 **If step 5 is over 90 seconds:** the insight agent embedding loop is likely the bottleneck.
-Batch the OpenAI embedding calls — one API call for all chunks instead of one per chunk.
+Batch the Gemini embedding calls — one API call for all chunks instead of one per chunk.
 
 **All 10 passing? You're demo-ready. Move to Prompt 41 for hardening.**
 
@@ -1505,20 +1505,20 @@ Batch the OpenAI embedding calls — one API call for all chunks instead of one 
 
 ### Prompt 41 — Antigravity
 ```
-Add retry logic to all Claude API calls.
+Add retry logic to all Gemini API calls.
 
 Create /backend/agents/llm_client.py:
 
-async def call_claude(system_prompt: str, user_message: str, max_tokens: int = 1000) -> str:
+async def call_gemini(system_prompt: str, user_message: str, max_tokens: int = 1000) -> str:
   - Retries up to 3 times with exponential backoff: 1s, 2s, 4s
   - On RateLimitError: wait and retry
   - On APIError: retry
   - After 3 failures: raise a PipelineError with a clear message
   - Returns the text content of the first content block
 
-Replace all direct anthropic.messages.create() calls in the agents with call_claude().
+Replace all direct client.models.generate_content() calls in the agents with call_gemini().
 
-Also add to call_claude:
+Also add to call_gemini:
 - Log each retry attempt with attempt number and error type
 - Log total tokens used per call (from response.usage)
 ```
@@ -1527,12 +1527,12 @@ Also add to call_claude:
 
 ### Prompt 42 — Antigravity
 ```
-Add retry logic to the OpenAI embedding calls.
+Add retry logic to the Gemini embedding calls.
 
 In insight_agent.py, wrap the embedding call:
 
 async def embed_texts(texts: list[str]) -> list[list[float]]:
-  - Call OpenAI embeddings.create() with model="text-embedding-3-small" and input=texts (batch)
+  - Call Gemini Client().models.embed_content() with model="text-embedding-004" and input=texts (batch)
   - Retry up to 3 times with exponential backoff
   - On failure after 3 retries: return zero vectors (list of 1536 zeros) for the failed batch
     Log a warning but do not crash the pipeline
@@ -1572,7 +1572,7 @@ Run /scripts/prebake_demo.py now and commit the output JSON.
 ```
 Add performance optimisation for the insight agent.
 
-Current bottleneck: sequential KMeans + Claude call per cluster.
+Current bottleneck: sequential KMeans + Gemini call per cluster.
 
 Optimisations:
 1. Embedding: already batched from Prompt 42. Confirm batch size doesn't exceed 2048 items.
@@ -1580,9 +1580,9 @@ Optimisations:
 2. KMeans: run silhouette scoring only for k=3,5,7 (not every integer 3-8).
    If fewer than 20 chunks, default to k=3 without silhouette check.
 
-3. Claude calls per cluster: run them concurrently with asyncio.gather().
-   Change: for cluster in clusters: await call_claude(...)
-   To: results = await asyncio.gather(*[call_claude(...) for cluster in clusters])
+3. Gemini calls per cluster: run them concurrently with asyncio.gather().
+   Change: for cluster in clusters: await call_gemini(...)
+   To: results = await asyncio.gather(*[call_gemini(...) for cluster in clusters])
 
 4. Add a timeout: if the entire insight agent takes more than 30 seconds,
    return whatever clusters are complete with a warning flag in the step event.

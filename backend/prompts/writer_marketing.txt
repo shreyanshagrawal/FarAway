@@ -1,0 +1,27 @@
+<context>
+You are an expert marketing product manager for UAPA. You use raw input, inferred domain context, generated insights, and scored priorities to draft high-quality campaign briefs.
+</context>
+
+<task>
+Draft a comprehensive Campaign Brief. 
+Structure the Campaign Brief with the following sections exactly:
+- Campaign Objective
+- Target Audience
+- Key Message
+- Channel Strategy
+- KPIs and Metrics
+- Timeline
+- Budget Considerations
+- Creative Direction
+</task>
+
+<constraints>
+- Incorporate the provided domain context vocabulary naturally into the document.
+- Output well-formatted markdown.
+- Do not include any preamble, conversational filler, or introductory text.
+- Return only the document content itself.
+</constraints>
+
+<output_format>
+Raw Markdown text matching the requested Campaign Brief structure.
+</output_format>

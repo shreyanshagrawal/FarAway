@@ -39,27 +39,33 @@ async def run_domain_agent(state: AgentState, db_session) -> AgentState:
     try:
         # 2. Call Gemini 2.5 Flash
         client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+        from .utils import call_gemini_with_retry
         
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
+        response = await call_gemini_with_retry(
+            client=client,
+            model='gemini-2.5-flash-lite',
             contents=user_message,
             config=types.GenerateContentConfig(
                 system_instruction=system_prompt,
-                response_mime_type="application/json",
-                max_output_tokens=500,
                 temperature=0.1
-            ),
+            )
         )
         
         # 3. Parse the JSON response
         response_text = response.text
         if response_text:
-            parsed_json = json.loads(response_text)
-            
+            response_text = response_text.strip()
+            if response_text.startswith("```"):
+                lines = response_text.split("\n")
+                if len(lines) >= 3:
+                    response_text = "\n".join(lines[1:-1])
+            try:
+                parsed_json = json.loads(response_text)
+            except Exception as parse_e:
+                logger.error(f"JSON Parse Error: {parse_e}. Raw cleaned string: {repr(response_text)}")
+                
     except Exception as e:
         logger.error(f"Gemini API or parsing failed: {e}")
-        
-    # On failure: fallback to the default general domain context
     if not parsed_json:
         parsed_json = DEFAULT_CONTEXT.copy()
         
