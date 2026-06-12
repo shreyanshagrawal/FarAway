@@ -16,9 +16,11 @@ def chunk_text(text: str, max_tokens: int = 512) -> List[str]:
         
     return chunks
 
+from api.streaming import publish_event
+
 def emit_step(run_id: str, agent_name: str, step_type: str, message: str, payload: Optional[Dict[str, Any]], sequence: int) -> Dict[str, Any]:
     """Formats and returns a dict formatted as the SSE event schema."""
-    return {
+    event = {
         "type": step_type,
         "agent": agent_name,
         "message": message,
@@ -27,6 +29,8 @@ def emit_step(run_id: str, agent_name: str, step_type: str, message: str, payloa
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "run_id": run_id
     }
+    publish_event(run_id, event)
+    return event
 
 def generate_run_id() -> str:
     """Returns a new UUID4 as a string."""

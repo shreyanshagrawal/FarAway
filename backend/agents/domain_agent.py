@@ -38,21 +38,15 @@ async def run_domain_agent(state: AgentState, db_session) -> AgentState:
     parsed_json = None
     try:
         # 2. Call Gemini 2.5 Flash
-        client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-        from .utils import call_gemini_with_retry
+        from .llm_client import call_gemini
         
-        response = await call_gemini_with_retry(
-            client=client,
-            model='gemini-2.5-flash-lite',
-            contents=user_message,
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                temperature=0.1
-            )
+        response_text = await call_gemini(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            response_mime_type="application/json"
         )
         
         # 3. Parse the JSON response
-        response_text = response.text
         if response_text:
             response_text = response_text.strip()
             if response_text.startswith("```"):

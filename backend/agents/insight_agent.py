@@ -17,7 +17,29 @@ from db.models import Insight
 
 logger = logging.getLogger(__name__)
 
-VECTOR_SIZE = 3072  # gemini-embedding-001 returns 3072 dimensions
+VECTOR_SIZE = 768  # text-embedding-004 returns 768 dimensions
+
+async def embed_texts(texts: list[str]) -> list[list[float]]:
+    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+    retries = [1, 2, 4]
+    
+    for attempt, wait_time in enumerate(retries, 1):
+        try:
+            response = client.models.embed_content(
+                model='text-embedding-004',
+                contents=texts
+            )
+            # Response may contain a list of embeddings
+            return [emb.values for emb in response.embeddings]
+        except Exception as e:
+            logger.warning(f"Batch embedding attempt {attempt} failed: {e}")
+            if attempt == len(retries):
+                logger.error("Batch embedding failed completely. Returning zero vectors.")
+                return [[0.0] * VECTOR_SIZE for _ in texts]
+            import asyncio
+            await asyncio.sleep(wait_time)
+    
+    return [[0.0] * VECTOR_SIZE for _ in texts]
 
 async def run_insight_agent(state: AgentState, db_session) -> AgentState:
     run_id = state.get("run_id", "unknown")
@@ -29,22 +51,8 @@ async def run_insight_agent(state: AgentState, db_session) -> AgentState:
         state["insights"] = []
         return state
         
-    # 2. For each chunk, call Gemini text-embedding-004
-    genai_client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    
-    embeddings = []
-    from .utils import embed_with_retry
-    for chunk in chunks:
-        try:
-            response = await embed_with_retry(
-                client=genai_client,
-                model='gemini-embedding-001',
-                contents=chunk
-            )
-            embeddings.append(response.embeddings[0].values)
-        except Exception as e:
-            logger.error(f"Embedding failed for chunk: {e}")
-            embeddings.append([0.0] * VECTOR_SIZE)
+    # 2. Batched embedding
+    embeddings = await embed_texts(chunks)
             
     # 3. Upsert all chunk vectors to Qdrant
     qdrant_host = os.environ.get("QDRANT_HOST", "localhost")
@@ -133,17 +141,12 @@ async def run_insight_agent(state: AgentState, db_session) -> AgentState:
         prompt = "Given these feedback items, return JSON: {\"theme_label\": string, \"sentiment_score\": float}"
         
         try:
-            from .utils import call_gemini_with_retry
-            resp = await call_gemini_with_retry(
-                client=genai_client,
-                model='gemini-2.5-flash-lite',
-                contents=combined_text,
-                config=types.GenerateContentConfig(
-                    system_instruction=prompt,
-                    temperature=0.1
-                )
+            from .llm_client import call_gemini
+            res_text = await call_gemini(
+                system_prompt=prompt,
+                user_message=combined_text,
+                response_mime_type="application/json"
             )
-            res_text = resp.text.strip()
             if res_text.startswith("```"):
                 lines = res_text.split("\n")
                 if len(lines) >= 3:

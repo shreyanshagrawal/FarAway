@@ -56,22 +56,14 @@ async def run_writer_agent(state: AgentState, db_session) -> AgentState:
             user_message += f"Quotes: {i['representative_quotes'][0]}\n"
         user_message += "\n"
         
-    # 3. Call Gemini
-    client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
-    
     try:
-        from .utils import call_gemini_with_retry
-        response = await call_gemini_with_retry(
-            client=client,
-            model='gemini-2.5-flash-lite',
-            contents=user_message,
-            config=types.GenerateContentConfig(
-                system_instruction=system_prompt,
-                max_output_tokens=2000,
-                temperature=0.4
-            )
+        from .llm_client import call_gemini
+        response_text = await call_gemini(
+            system_prompt=system_prompt,
+            user_message=user_message,
+            max_tokens=2000
         )
-        spec_doc = response.text.strip()
+        spec_doc = response_text.strip()
     except Exception as e:
         logger.error(f"Writer generation failed: {e}")
         spec_doc = "# Generation Failed\n\nThe specification document could not be generated."

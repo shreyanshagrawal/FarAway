@@ -46,16 +46,13 @@ Return JSON exactly in this format:
 {{"impact_score": float, "effort_score": float, "confidence_score": float, "rationale": "string"}}
 """
         try:
-            from .utils import call_gemini_with_retry
-            resp = await call_gemini_with_retry(
-                client=client,
-                model='gemini-2.5-flash-lite',
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    temperature=0.1
-                )
+            from .llm_client import call_gemini
+            res_text = await call_gemini(
+                system_prompt="You are an expert product manager scoring initiatives.",
+                user_message=prompt,
+                response_mime_type="application/json"
             )
-            res_text = resp.text.strip()
+            
             if res_text.startswith("```"):
                 lines = res_text.split("\n")
                 if len(lines) >= 3:

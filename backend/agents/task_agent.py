@@ -30,17 +30,12 @@ Return ONLY a JSON array. Each item must have the following keys exactly:
 """
     
     try:
-        from .utils import call_gemini_with_retry
-        response = await call_gemini_with_retry(
-            client=client,
-            model='gemini-2.5-flash-lite',
-            contents=f"Specification:\n{spec_document}",
-            config=types.GenerateContentConfig(
-                system_instruction=prompt,
-                temperature=0.2
-            )
+        from .llm_client import call_gemini
+        res_text = await call_gemini(
+            system_prompt=prompt,
+            user_message=f"Specification:\n{spec_document}",
+            response_mime_type="application/json"
         )
-        res_text = response.text.strip()
         if res_text.startswith("```"):
             lines = res_text.split("\n")
             if len(lines) >= 3:
