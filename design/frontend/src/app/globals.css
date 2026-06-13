@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #eeeeee;
+  --color-foreground: #111111;
+  --color-orange: #ff5500;
+  --color-surface: #ffffff;
+  --color-border: rgba(0, 0, 0, 0.1);
+
+  --font-sans: var(--font-jakarta);
+  --font-display: var(--font-syncopate);
+  --font-mono: var(--font-mono);
+}
+
+/* Base */
+*, *::before, *::after { box-sizing: border-box; }
+
+html.lenis { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-scrolling iframe { pointer-events: none; }
+
+body {
+  font-family: var(--font-mono);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+  background-color: #05010d; /* Default to dark theme for app */
+  color: #ffffff;
+}
+
+.theme-light-grid {
+  background-color: #eeeeee;
+  color: #111111;
+  /* The structural background grid pattern */
+  background-image: 
+    linear-gradient(to right, rgba(0,0,0,0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0,0,0,0.05) 1px, transparent 1px);
+  background-size: 100px 100px;
+  background-position: center top;
+  min-height: 100vh;
+}
+
+/* Glass panel for dark dashboard */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 24px;
+}
+
+::selection {
+  background: #ff5500;
+  color: #ffffff;
+}
+
+body::-webkit-scrollbar { width: 0; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Structural Grid Cards */
+.grid-panel {
+  background: #f4f4f4;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Orange Corner Accents (Like the reference image) */
+.corner-accent {
+  position: relative;
+}
+.corner-accent::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  width: 8px;
+  height: 8px;
+  background-color: #ff5500;
+}
+.corner-accent-tr::before { left: auto; right: 10px; top: 10px; }
+.corner-accent-bl::before { top: auto; bottom: 10px; left: 10px; }
+.corner-accent-br::before { top: auto; bottom: 10px; left: auto; right: 10px; }
+
+
+/* Buttons */
+.btn-industrial {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: #ff5500;
+  color: #fff;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  border: none;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.btn-industrial:hover {
+  background: #e64d00;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(255, 85, 0, 0.2);
+}
+
+.btn-outline {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 1rem 2rem;
+  background: transparent;
+  color: #111111;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.8rem;
+  border: 1px solid rgba(0,0,0,0.2);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.btn-outline:hover {
+  border-color: #111111;
+  background: rgba(0, 0, 0, 0.02);
+}
